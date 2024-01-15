@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 interface Matrix {
 	power: number;
@@ -14,6 +14,9 @@ const MatrixCalculator: React.FC = () => {
 	const [results, setResults] = useState<Matrix[]>([]);
 	const [finalResult, setFinalResult] = useState<number[][] | null>(null);
 	const [matrix, setMatrix] = useState<number[][]>(createEmptyMatrix("2", "2"));
+	const adjacencyMatrix = useCallback(() => {
+		return finalResult?.map((row) => row.map((val) => (val !== 0 ? 1 : 0)));
+	}, [finalResult]);
 
 	function createEmptyMatrix(rows: string, columns: string): number[][] {
 		const r = parseInt(rows, 10);
@@ -21,30 +24,26 @@ const MatrixCalculator: React.FC = () => {
 		return Array.from({ length: r }, () => Array(c).fill(0));
 	}
 
-	const findHamiltonianCycle = (graph: number[][]): number[] | null => {
+	const findHamiltonianCycle = (
+		graph: number[][] | undefined
+	): number[] | null => {
+		if (!graph) return null;
 		const vertices = graph.length;
-
 		const path: number[] = [];
 		const visited: boolean[] = Array(vertices).fill(false);
-
 		const hamiltonianCycleUtil = (pos: number): boolean => {
 			if (pos === vertices) {
-				// All vertices are visited
 				return graph[path[pos - 1]][path[0]] === 1;
 			}
-
 			for (let v = 1; v < vertices; v++) {
 				if (isSafe(v, pos)) {
 					path[pos] = v;
-
 					if (hamiltonianCycleUtil(pos + 1)) {
 						return true;
 					}
-
-					path[pos] = -1; // Backtrack
+					path[pos] = -1;
 				}
 			}
-
 			return false;
 		};
 
@@ -52,20 +51,15 @@ const MatrixCalculator: React.FC = () => {
 			if (graph[path[pos - 1]][v] === 0) {
 				return false;
 			}
-
 			if (visited[v]) {
 				return false;
 			}
-
 			return true;
 		};
-
 		path[0] = 0;
-
 		if (!hamiltonianCycleUtil(1)) {
 			return null;
 		}
-
 		return path;
 	};
 	const handleMatrixInputChange = () => {
@@ -94,8 +88,6 @@ const MatrixCalculator: React.FC = () => {
 		setFinalResult(null);
 		setColumns(colCount);
 		setMatrix(updatedMatrix);
-		// RECALCULATE THE MATRIX
-		calculateMatrixPower();
 	};
 
 	const handleChangePower = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +104,6 @@ const MatrixCalculator: React.FC = () => {
 			setResults([]);
 			setFinalResult(null);
 			setPower(number + "");
-			// RECALCULATE THE MATRIX
 			calculateMatrixPower();
 		} catch (e) {
 			console.log(e);
@@ -174,7 +165,6 @@ const MatrixCalculator: React.FC = () => {
 		setMatrix(newMatrix);
 		setResults([]);
 		setFinalResult(null);
-		// RECALCULATE THE MATRIX
 		calculateMatrixPower();
 	};
 
@@ -343,8 +333,8 @@ const MatrixCalculator: React.FC = () => {
 						</div>
 						<div className="my-2">
 							<p className="underline font-bold">Drum hamiltonean:</p>{" "}
-							{findHamiltonianCycle(finalResult ?? []) != null
-								? "{" + findHamiltonianCycle(finalResult ?? []) + "}"
+							{findHamiltonianCycle(adjacencyMatrix()) != null
+								? "{" + findHamiltonianCycle(adjacencyMatrix()) + "}"
 								: "Nu are drum hamiltonean."}
 						</div>
 						<p className="underline">Rezultate intermediare:</p>
