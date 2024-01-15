@@ -280,7 +280,7 @@ const MatrixCalculator: React.FC = () => {
 					</label>
 					<textarea
 						name="inputText"
-						className="min-h-40"
+						className="min-h-28"
 						placeholder="Ex: 1,2,3/1,2,3"
 						ref={matrixFromTextRef}
 					/>
